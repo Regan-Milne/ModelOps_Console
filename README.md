@@ -71,6 +71,7 @@ environment:
 <img width="581" height="584" alt="Screenshot 2025-11-22 110209" src="https://github.com/user-attachments/assets/2437a919-54be-4ea8-86d7-ff10c7bb9474" />
 
 
+
 ModelOps Console automatically detects and lists the models you have installed in your local Ollama environment.
 
 Examples might include:
