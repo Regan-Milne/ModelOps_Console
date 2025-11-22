@@ -2,6 +2,8 @@
 
 A simple, production-ready MLOps dashboard for monitoring Ollama chat interactions with Prometheus metrics and Grafana visualization.
 
+<img width="1420" height="653" alt="Screenshot 2025-11-22 110027" src="https://github.com/user-attachments/assets/b1a0cf59-06a4-4308-9fff-27c14caad688" />
+
 ## Features
 
 - **FastAPI Chat Service**: REST API for chatting with any Ollama model
