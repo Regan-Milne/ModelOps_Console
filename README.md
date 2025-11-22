@@ -68,6 +68,9 @@ environment:
 
 ### Available Models (auto-detected from your Ollama setup)
 
+<img width="581" height="584" alt="Screenshot 2025-11-22 110209" src="https://github.com/user-attachments/assets/2437a919-54be-4ea8-86d7-ff10c7bb9474" />
+
+
 ModelOps Console automatically detects and lists the models you have installed in your local Ollama environment.
 
 Examples might include:
@@ -80,6 +83,9 @@ _No specific models are bundled — the dashboard adapts to whatever you have in
 
 
 ## Monitoring & Metrics
+
+<img width="1416" height="979" alt="Screenshot 2025-11-22 110238" src="https://github.com/user-attachments/assets/70b4b69b-619c-41d5-8dd4-5996bb137281" />
+
 
 ### Key Metrics Available:
 - `chat_requests_total` - Total requests by model and status
