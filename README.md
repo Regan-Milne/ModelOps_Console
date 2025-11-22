@@ -64,12 +64,18 @@ environment:
   - DEFAULT_MODEL=qwen3:14b
 ```
 
-## Available Models (from your setup)
-- `phi3:mini` (CPU-friendly default)
-- `qwen3:14b`, `qwen3:32b` 
-- `mistral-small3.2:latest`
-- `dolphin-mixtral:8x7b-v2.5-q3_K_S`
-- And many more...
+### Available Models (auto-detected from your Ollama setup)
+
+ModelOps Console automatically detects and lists the models you have installed in your local Ollama environment.
+
+Examples might include:
+- `llama3` / `llama3:instruct`
+- `mistral` / `mistral-small`
+- `qwen2` / `qwen2:7b`
+- `phi3`
+
+_No specific models are bundled — the dashboard adapts to whatever you have installed._
+
 
 ## Monitoring & Metrics
 
