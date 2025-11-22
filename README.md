@@ -13,6 +13,10 @@ A simple, production-ready MLOps dashboard for monitoring Ollama chat interactio
 - **Health Checks**: Container health monitoring for reliability
 - **Docker Compose**: One-command deployment
 
+
+<img width="1420" height="653" alt="Screenshot 2025-11-22 110027" src="https://github.com/user-attachments/assets/30611cde-aac8-4b14-ac14-415e248e362b" />
+
+
 ## Prerequisites
 
 1. **Ollama** running on your host machine:
