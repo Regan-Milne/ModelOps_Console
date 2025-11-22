@@ -1,0 +1,941 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>ModelOps Console</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Roboto', 'Helvetica Neue', Arial, sans-serif;
+            background: #111217;
+            height: 100vh;
+            overflow: hidden;
+            color: #ffffff;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 20px;
+            gap: 20px;
+        }
+
+        .chat-section {
+            flex: 0 0 40%;
+            background: #1a1a1a;
+            border-radius: 4px;
+            border: 1px solid #262628;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+        }
+
+        .metrics-section {
+            flex: 0 0 60%;
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+            overflow-y: auto;
+            max-height: 100vh;
+            padding: 16px;
+        }
+
+        .chat-header {
+            background: #262628;
+            color: #ffffff;
+            padding: 16px 20px;
+            border-bottom: 1px solid #404040;
+        }
+
+        .chat-header h1 {
+            font-size: 24px;
+            margin-bottom: 10px;
+        }
+
+        .model-selector {
+            margin-top: 10px;
+        }
+
+        .model-selector select {
+            padding: 6px 12px;
+            border: 1px solid #404040;
+            border-radius: 3px;
+            font-size: 13px;
+            background: #1a1a1a;
+            color: #ffffff;
+            transition: border-color 0.2s;
+        }
+
+        .model-selector select:focus {
+            border-color: #33b5e5;
+            outline: none;
+        }
+
+        .model-selector select option {
+            background: #1a2332;
+            color: #00f5ff;
+        }
+
+        .advanced-toggle {
+            margin-left: 10px;
+            padding: 6px 12px;
+            background: #404040;
+            border: 1px solid #666666;
+            border-radius: 3px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .advanced-toggle:hover {
+            background: #555555;
+            border-color: #33b5e5;
+        }
+
+        .advanced-toggle.active {
+            background: #33b5e5;
+            border-color: #33b5e5;
+        }
+
+        .advanced-settings {
+            display: none;
+            padding: 16px;
+            background: #111217;
+            border-top: 1px solid #404040;
+            margin-top: 10px;
+            border-radius: 3px;
+        }
+
+        .advanced-settings.open {
+            display: block;
+        }
+
+        .settings-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 16px;
+            margin-bottom: 16px;
+        }
+
+        .setting-item {
+            display: flex;
+            flex-direction: column;
+            gap: 6px;
+        }
+
+        .setting-item label {
+            font-size: 13px;
+            font-weight: 500;
+            color: #ffffff;
+        }
+
+        .setting-item small {
+            font-size: 11px;
+            color: #8e8e8e;
+            line-height: 1.3;
+        }
+
+        .slider-container {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .slider-container input[type="range"] {
+            flex: 1;
+            height: 6px;
+            background: #404040;
+            border-radius: 3px;
+            outline: none;
+            -webkit-appearance: none;
+        }
+
+        .slider-container input[type="range"]::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            background: #33b5e5;
+            border-radius: 50%;
+            cursor: pointer;
+        }
+
+        .slider-container input[type="range"]::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            background: #33b5e5;
+            border-radius: 50%;
+            border: none;
+            cursor: pointer;
+        }
+
+        .slider-value {
+            font-size: 12px;
+            color: #33b5e5;
+            font-weight: 500;
+            min-width: 40px;
+            text-align: right;
+        }
+
+        .preset-buttons {
+            display: flex;
+            gap: 8px;
+            justify-content: center;
+            padding-top: 12px;
+            border-top: 1px solid #404040;
+        }
+
+        .preset-btn {
+            padding: 6px 12px;
+            background: #262628;
+            border: 1px solid #404040;
+            border-radius: 3px;
+            color: #ffffff;
+            font-size: 12px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .preset-btn:hover {
+            background: #404040;
+            border-color: #33b5e5;
+        }
+
+        @media (max-width: 768px) {
+            .settings-grid {
+                grid-template-columns: 1fr;
+                gap: 12px;
+            }
+            
+            .preset-buttons {
+                flex-wrap: wrap;
+            }
+        }
+
+        .chat-messages {
+            flex: 1;
+            padding: 16px;
+            overflow-y: auto;
+            background: #111217;
+        }
+
+        .message {
+            margin-bottom: 15px;
+            display: flex;
+            align-items: flex-start;
+        }
+
+        .message.user {
+            justify-content: flex-end;
+        }
+
+        .message-bubble {
+            max-width: 70%;
+            padding: 12px 18px;
+            border-radius: 18px;
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .user .message-bubble {
+            background: #33b5e5;
+            color: #ffffff;
+            border-bottom-right-radius: 5px;
+        }
+
+        .assistant .message-bubble {
+            background: #262628;
+            color: #ffffff;
+            border-bottom-left-radius: 5px;
+        }
+
+        .message-meta {
+            font-size: 11px;
+            color: #8e8e8e;
+            margin-top: 5px;
+        }
+
+        .chat-input {
+            padding: 16px;
+            border-top: 1px solid #404040;
+            background: #1a1a1a;
+        }
+
+        .input-group {
+            display: flex;
+            gap: 10px;
+        }
+
+        #messageInput {
+            flex: 1;
+            padding: 8px 12px;
+            border: 1px solid #404040;
+            border-radius: 3px;
+            font-size: 14px;
+            outline: none;
+            transition: border-color 0.2s;
+            background: #111217;
+            color: #ffffff;
+        }
+
+        #messageInput:focus {
+            border-color: #33b5e5;
+        }
+
+        #messageInput::placeholder {
+            color: #8e8e8e;
+        }
+
+        #sendButton, #clearButton {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            font-weight: 500;
+            transition: background-color 0.2s;
+        }
+
+        #sendButton {
+            background: #33b5e5;
+            color: #ffffff;
+        }
+
+        #clearButton {
+            background: #666666;
+            color: #ffffff;
+        }
+
+        #sendButton:hover:not(:disabled) {
+            background: #2196f3;
+        }
+
+        #clearButton:hover {
+            background: #777777;
+        }
+
+        #sendButton:disabled {
+            background: #404040;
+            color: #8e8e8e;
+            cursor: not-allowed;
+        }
+
+        .loading {
+            display: none;
+            text-align: center;
+            padding: 16px;
+            color: #8e8e8e;
+        }
+
+        .metrics-box {
+            background: #1a1a1a;
+            border: 1px solid #262628;
+            border-radius: 8px;
+            height: 280px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+            margin-bottom: 16px;
+        }
+        
+        .metrics-header {
+            background: #262628;
+            color: #ffffff;
+            padding: 12px 16px;
+            border-bottom: 1px solid #404040;
+            font-size: 11px;
+            font-weight: 500;
+            border-radius: 8px 8px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .metrics-content {
+            padding: 16px;
+            overflow-y: auto;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 12px;
+            margin-bottom: 16px;
+        }
+
+        .metric-card {
+            background: #262628;
+            padding: 12px;
+            border-radius: 3px;
+            text-align: center;
+            border: 1px solid #404040;
+        }
+
+
+        .metric-value {
+            font-size: 20px;
+            font-weight: 600;
+            color: #33b5e5;
+        }
+
+        .metric-label {
+            font-size: 11px;
+            color: #8e8e8e;
+            margin-top: 4px;
+        }
+
+        .chart-box {
+            background: #1a1a1a;
+            border: 1px solid #262628;
+            border-radius: 8px;
+            margin-bottom: 16px;
+            overflow: hidden;
+            height: 360px;
+            display: flex;
+            flex-direction: column;
+            flex-shrink: 0;
+        }
+
+
+        .chart-header {
+            background: #262628;
+            color: #ffffff;
+            padding: 12px 16px;
+            font-size: 11px;
+            font-weight: 500;
+            border-bottom: 1px solid #404040;
+            border-radius: 8px 8px 0 0;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .chart-iframe {
+            width: 100%;
+            border: none;
+            background: transparent;
+            display: block;
+            flex: 1;
+            height: 320px;
+            border-radius: 0 0 8px 8px;
+        }
+
+        .metrics-chips {
+            display: flex;
+            gap: 6px;
+            margin-top: 8px;
+            flex-wrap: wrap;
+        }
+
+        .metric-chip {
+            background: #262628;
+            color: #33b5e5;
+            padding: 3px 8px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            border: 1px solid #404040;
+        }
+
+
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+                padding: 10px;
+            }
+            
+            .metrics-section {
+                height: 300px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="chat-section">
+            <div class="chat-header">
+                <h1>ModelOps Console</h1>
+                <p>Chat with your local AI models</p>
+                <div class="model-selector">
+                    <select id="modelSelect">
+                        <option value="">Loading models...</option>
+                    </select>
+                    <button id="advancedToggle" class="advanced-toggle">Advanced Settings</button>
+                </div>
+                
+                <div class="advanced-settings" id="advancedSettings">
+                    <div class="settings-grid">
+                        <div class="setting-item">
+                            <label for="temperatureSlider">Temperature</label>
+                            <div class="slider-container">
+                                <input type="range" id="temperatureSlider" min="0" max="2" step="0.1" value="0.7">
+                                <span class="slider-value" id="temperatureValue">0.7</span>
+                            </div>
+                            <small>Creativity (0=focused, 2=creative)</small>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="topPSlider">Top P</label>
+                            <div class="slider-container">
+                                <input type="range" id="topPSlider" min="0" max="1" step="0.05" value="0.9">
+                                <span class="slider-value" id="topPValue">0.9</span>
+                            </div>
+                            <small>Nucleus sampling (0.1-1.0)</small>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="topKSlider">Top K</label>
+                            <div class="slider-container">
+                                <input type="range" id="topKSlider" min="1" max="100" step="1" value="40">
+                                <span class="slider-value" id="topKValue">40</span>
+                            </div>
+                            <small>Token selection pool (1-100)</small>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="maxTokensSlider">Max Tokens</label>
+                            <div class="slider-container">
+                                <input type="range" id="maxTokensSlider" min="50" max="2048" step="50" value="512">
+                                <span class="slider-value" id="maxTokensValue">512</span>
+                            </div>
+                            <small>Response length limit</small>
+                        </div>
+                        
+                        <div class="setting-item">
+                            <label for="repeatPenaltySlider">Repeat Penalty</label>
+                            <div class="slider-container">
+                                <input type="range" id="repeatPenaltySlider" min="0.5" max="2" step="0.1" value="1.1">
+                                <span class="slider-value" id="repeatPenaltyValue">1.1</span>
+                            </div>
+                            <small>Reduce repetition (1.0=off)</small>
+                        </div>
+                    </div>
+                    
+                    <div class="preset-buttons">
+                        <button class="preset-btn" data-preset="creative">Creative</button>
+                        <button class="preset-btn" data-preset="balanced">Balanced</button>
+                        <button class="preset-btn" data-preset="focused">Focused</button>
+                        <button class="preset-btn" data-preset="reset">Reset Defaults</button>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="chat-messages" id="chatMessages">
+                <div class="message assistant">
+                    <div class="message-bubble">
+                        👋 Welcome to your Ollama MLOps Dashboard! I'm ready to chat using any of your local AI models. Try asking me anything!
+                        <div class="message-meta">System message</div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="loading" id="loading">
+                <div>🤔 Thinking...</div>
+            </div>
+            
+            <div class="chat-input">
+                <div class="input-group">
+                    <input type="text" id="messageInput" placeholder="Type your message here..." 
+                           maxlength="500" autocomplete="off">
+                    <button id="clearButton" type="button">Clear</button>
+                    <button id="sendButton">Send</button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="metrics-section">
+            <div class="metrics-header">
+                <h2>📊 Live Metrics</h2>
+                <p>Real-time performance monitoring</p>
+            </div>
+            
+            <div class="metrics-grid">
+                <div class="metric-card">
+                    <div class="metric-value" id="totalRequests">0</div>
+                    <div class="metric-label">Total Requests</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="avgLatency">0ms</div>
+                    <div class="metric-label">Avg Latency</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="activeModel">Loading...</div>
+                    <div class="metric-label">Current Model</div>
+                </div>
+                <div class="metric-card">
+                    <div class="metric-value" id="totalTokens">0</div>
+                    <div class="metric-label">Total Tokens</div>
+                </div>
+            </div>
+            
+            <div class="grafana-section">
+                <h3>📈 Grafana Metrics</h3>
+                
+                <div class="chart-box">
+                    <div class="chart-header">Chat Request Rate</div>
+                    <iframe class="chart-iframe" 
+                            src="http://localhost:3000/d-solo/chat-metrics/ollama-chat-metrics?orgId=1&panelId=1&theme=dark&from=now-5m&to=now&refresh=5s">
+                    </iframe>
+                </div>
+                
+                <div class="chart-box">
+                    <div class="chart-header">Response Latency</div>
+                    <iframe class="chart-iframe" 
+                            src="http://localhost:3000/d-solo/chat-metrics/ollama-chat-metrics?orgId=1&panelId=2&theme=dark&from=now-5m&to=now&refresh=5s">
+                    </iframe>
+                </div>
+                
+                <div class="chart-box">
+                    <div class="chart-header">Token Throughput by Model</div>
+                    <iframe class="chart-iframe" 
+                            src="http://localhost:3000/d-solo/chat-metrics/ollama-chat-metrics?orgId=1&panelId=3&theme=dark&from=now-5m&to=now&refresh=5s">
+                    </iframe>
+                </div>
+                
+                <div class="chart-box">
+                    <div class="chart-header">Error Rate</div>
+                    <iframe class="chart-iframe" 
+                            src="http://localhost:3000/d-solo/chat-metrics/ollama-chat-metrics?orgId=1&panelId=4&theme=dark&from=now-5m&to=now&refresh=5s">
+                    </iframe>
+                </div>
+                
+                <div style="text-align: center; margin-top: 10px;">
+                    <a href="http://localhost:3000" target="_blank" style="color: #40e0d0; text-decoration: none;">
+                        🔗 Open Full Grafana Dashboard
+                    </a>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let requestCount = 0;
+        let totalLatency = 0;
+        let totalTokens = 0;
+        
+        // Session management - generate new session on each page load
+        let sessionId = 'session_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+
+        const chatMessages = document.getElementById('chatMessages');
+        const messageInput = document.getElementById('messageInput');
+        const sendButton = document.getElementById('sendButton');
+        const clearButton = document.getElementById('clearButton');
+        const modelSelect = document.getElementById('modelSelect');
+        const loading = document.getElementById('loading');
+
+        // Advanced settings elements
+        const advancedToggle = document.getElementById('advancedToggle');
+        const advancedSettings = document.getElementById('advancedSettings');
+        const temperatureSlider = document.getElementById('temperatureSlider');
+        const topPSlider = document.getElementById('topPSlider');
+        const topKSlider = document.getElementById('topKSlider');
+        const maxTokensSlider = document.getElementById('maxTokensSlider');
+        const repeatPenaltySlider = document.getElementById('repeatPenaltySlider');
+
+        // Advanced settings state
+        let modelParameters = {
+            temperature: 0.7,
+            top_p: 0.9,
+            top_k: 40,
+            num_predict: 512,
+            repeat_penalty: 1.1
+        };
+
+        // Metric elements
+        const totalRequestsEl = document.getElementById('totalRequests');
+        const avgLatencyEl = document.getElementById('avgLatency');
+        const activeModelEl = document.getElementById('activeModel');
+        const totalTokensEl = document.getElementById('totalTokens');
+
+        function addMessage(content, isUser = false, data = {}) {
+            const messageDiv = document.createElement('div');
+            messageDiv.className = `message ${isUser ? 'user' : 'assistant'}`;
+            
+            let metaInfo = '';
+            let metricsChips = '';
+            
+            if (!isUser && data.model) {
+                // Basic meta info
+                const tokens = data.tokens || estimateTokens(content);
+                metaInfo = `<div class="message-meta">Model: ${data.model} • ${(data.latency_sec || 0).toFixed(2)}s • ${tokens} tokens</div>`;
+                
+                // Add rich metrics chips if available
+                if (data.metrics) {
+                    metricsChips = `
+                        <div class="metrics-chips">
+                            <span class="metric-chip">${data.metrics.tps} TPS</span>
+                            <span class="metric-chip">${data.metrics.ttft_ms}ms TTFT</span>
+                            <span class="metric-chip">${data.metrics.process_ms}ms Process</span>
+                            <span class="metric-chip">${data.metrics.generate_ms}ms Generate</span>
+                        </div>
+                    `;
+                }
+            } else if (isUser) {
+                metaInfo = `<div class="message-meta">You • ${new Date().toLocaleTimeString()}</div>`;
+            }
+            
+            messageDiv.innerHTML = `
+                <div class="message-bubble">
+                    ${content}
+                    ${metaInfo}
+                    ${metricsChips}
+                </div>
+            `;
+            
+            chatMessages.appendChild(messageDiv);
+            chatMessages.scrollTop = chatMessages.scrollHeight;
+        }
+
+        function estimateTokens(text) {
+            return text.split(/\s+/).length;
+        }
+
+        function updateMetrics(model, latency, tokens) {
+            requestCount++;
+            totalLatency += latency;
+            totalTokens += tokens;
+
+            totalRequestsEl.textContent = requestCount;
+            avgLatencyEl.textContent = Math.round(totalLatency / requestCount * 1000) + 'ms';
+            activeModelEl.textContent = model;
+            totalTokensEl.textContent = totalTokens;
+        }
+
+        async function sendMessage() {
+            const message = messageInput.value.trim();
+            const model = modelSelect.value;
+            
+            if (!message) return;
+            
+            // Disable input
+            messageInput.disabled = true;
+            sendButton.disabled = true;
+            loading.style.display = 'block';
+            
+            // Add user message
+            addMessage(message, true);
+            messageInput.value = '';
+            
+            try {
+                const response = await fetch('/chat', {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        message: message,
+                        model: model,
+                        sessionId: sessionId,
+                        options: modelParameters
+                    })
+                });
+                
+                const data = await response.json();
+                
+                if (response.ok) {
+                    const tokens = data.tokens || estimateTokens(data.reply);
+                    addMessage(data.reply, false, data);
+                    updateMetrics(data.model, data.latency_sec, tokens);
+                } else {
+                    addMessage(`❌ Error: ${data.detail || 'Unknown error'}`, false, {});
+                }
+                
+            } catch (error) {
+                addMessage(`❌ Connection error: ${error.message}`, false, {});
+            } finally {
+                // Re-enable input
+                messageInput.disabled = false;
+                sendButton.disabled = false;
+                loading.style.display = 'none';
+                messageInput.focus();
+            }
+        }
+
+        // Event listeners
+        sendButton.addEventListener('click', sendMessage);
+        messageInput.addEventListener('keypress', (e) => {
+            if (e.key === 'Enter' && !e.shiftKey) {
+                e.preventDefault();
+                sendMessage();
+            }
+        });
+
+        modelSelect.addEventListener('change', (e) => {
+            activeModelEl.textContent = e.target.value;
+        });
+
+        // Clear session handler
+        clearButton.addEventListener('click', async () => {
+            try {
+                await fetch(`/chat/session/${sessionId}`, { method: 'DELETE' });
+                // Clear UI
+                chatMessages.innerHTML = `
+                    <div class="message assistant">
+                        <div class="message-bubble">
+                            🔄 Session cleared! Starting fresh conversation.
+                            <div class="message-meta">System message</div>
+                        </div>
+                    </div>
+                `;
+                // Reset metrics
+                requestCount = 0;
+                totalLatency = 0;
+                totalTokens = 0;
+                updateMetrics('', 0, 0);
+            } catch (error) {
+                console.error('Failed to clear session:', error);
+            }
+        });
+
+        // Load available models
+        async function loadModels() {
+            try {
+                const response = await fetch('/models');
+                const data = await response.json();
+                
+                if (data.models && data.models.length > 0) {
+                    // Clear loading option
+                    modelSelect.innerHTML = '';
+                    
+                    // Preferred models for default selection
+                    const preferredModels = ['phi4-mini:latest', 'phi3:mini', 'llama3:latest', 'mistral:latest'];
+                    let defaultModel = null;
+                    
+                    // Add models to dropdown
+                    data.models.forEach(model => {
+                        const option = document.createElement('option');
+                        option.value = model.name;
+                        option.textContent = model.name;
+                        modelSelect.appendChild(option);
+                        
+                        // Set default if it's in our preferred list
+                        if (!defaultModel && preferredModels.includes(model.name)) {
+                            defaultModel = model.name;
+                        }
+                    });
+                    
+                    // If no preferred model found, use the first available
+                    if (!defaultModel && data.models.length > 0) {
+                        defaultModel = data.models[0].name;
+                    }
+                    
+                    // Set the default selection
+                    if (defaultModel) {
+                        modelSelect.value = defaultModel;
+                        activeModelEl.textContent = defaultModel;
+                    }
+                } else {
+                    // No models available
+                    modelSelect.innerHTML = '<option value="">No models available</option>';
+                    modelSelect.disabled = true;
+                    sendButton.disabled = true;
+                    
+                    // Show error message
+                    addMessage('❌ No Ollama models found. Please install and pull models using: ollama pull &lt;model-name&gt;', false, {});
+                }
+            } catch (error) {
+                console.error('Failed to load models:', error);
+                modelSelect.innerHTML = '<option value="">Failed to load models</option>';
+                addMessage('⚠️ Could not connect to Ollama. Please ensure Ollama is running and accessible.', false, {});
+            }
+        }
+
+        // Advanced settings functionality
+        function toggleAdvancedSettings() {
+            const isOpen = advancedSettings.classList.contains('open');
+            if (isOpen) {
+                advancedSettings.classList.remove('open');
+                advancedToggle.classList.remove('active');
+                advancedToggle.textContent = 'Advanced Settings';
+            } else {
+                advancedSettings.classList.add('open');
+                advancedToggle.classList.add('active');
+                advancedToggle.textContent = 'Hide Settings';
+            }
+        }
+
+        function updateSliderValue(slider, valueElement, parameter) {
+            const value = parseFloat(slider.value);
+            valueElement.textContent = value;
+            modelParameters[parameter] = value;
+        }
+
+        function setPreset(preset) {
+            switch(preset) {
+                case 'creative':
+                    modelParameters = { temperature: 1.2, top_p: 0.95, top_k: 80, num_predict: 512, repeat_penalty: 1.05 };
+                    break;
+                case 'balanced':
+                    modelParameters = { temperature: 0.7, top_p: 0.9, top_k: 40, num_predict: 512, repeat_penalty: 1.1 };
+                    break;
+                case 'focused':
+                    modelParameters = { temperature: 0.3, top_p: 0.7, top_k: 20, num_predict: 512, repeat_penalty: 1.15 };
+                    break;
+                case 'reset':
+                    modelParameters = { temperature: 0.7, top_p: 0.9, top_k: 40, num_predict: 512, repeat_penalty: 1.1 };
+                    break;
+            }
+            updateSliderUI();
+        }
+
+        function updateSliderUI() {
+            temperatureSlider.value = modelParameters.temperature;
+            topPSlider.value = modelParameters.top_p;
+            topKSlider.value = modelParameters.top_k;
+            maxTokensSlider.value = modelParameters.num_predict;
+            repeatPenaltySlider.value = modelParameters.repeat_penalty;
+
+            document.getElementById('temperatureValue').textContent = modelParameters.temperature;
+            document.getElementById('topPValue').textContent = modelParameters.top_p;
+            document.getElementById('topKValue').textContent = modelParameters.top_k;
+            document.getElementById('maxTokensValue').textContent = modelParameters.num_predict;
+            document.getElementById('repeatPenaltyValue').textContent = modelParameters.repeat_penalty;
+        }
+
+        // Event listeners for advanced settings
+        advancedToggle.addEventListener('click', toggleAdvancedSettings);
+
+        temperatureSlider.addEventListener('input', (e) => 
+            updateSliderValue(e.target, document.getElementById('temperatureValue'), 'temperature'));
+        topPSlider.addEventListener('input', (e) => 
+            updateSliderValue(e.target, document.getElementById('topPValue'), 'top_p'));
+        topKSlider.addEventListener('input', (e) => 
+            updateSliderValue(e.target, document.getElementById('topKValue'), 'top_k'));
+        maxTokensSlider.addEventListener('input', (e) => 
+            updateSliderValue(e.target, document.getElementById('maxTokensValue'), 'num_predict'));
+        repeatPenaltySlider.addEventListener('input', (e) => 
+            updateSliderValue(e.target, document.getElementById('repeatPenaltyValue'), 'repeat_penalty'));
+
+        // Preset buttons
+        document.querySelectorAll('.preset-btn').forEach(btn => {
+            btn.addEventListener('click', (e) => {
+                const preset = e.target.dataset.preset;
+                setPreset(preset);
+            });
+        });
+
+        // Load models on page load
+        loadModels();
+
+        // Auto-focus input
+        messageInput.focus();
+
+        // Update metrics periodically
+        setInterval(async () => {
+            try {
+                const response = await fetch('/health');
+                const health = await response.json();
+                // Could add health status indicators here
+            } catch (error) {
+                console.log('Health check failed:', error);
+            }
+        }, 10000);
+    </script>
+</body>
+</html>
