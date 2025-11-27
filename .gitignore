@@ -39,3 +39,8 @@ Thumbs.db
 # Local development
 .env.local
 docker-compose.override.yml
+
+# Development logs (internal use only)
+PROJECT_LOG.md
+DEVELOPMENT_STATUS.md
+buildInstruct.md
