@@ -1,193 +1,258 @@
-# Ollama MLOps Dashboard
+🚀 ModelOps Console
 
-A simple, production-ready MLOps dashboard for monitoring Ollama chat interactions with Prometheus metrics and Grafana visualization.
+A lightweight, production-style MLOps observability stack for local Ollama models.
 
-## Features
+This project demonstrates how to build a real inference service, expose structured Prometheus metrics, and visualize live model performance through Grafana — all wired together with Docker Compose.
 
-- **FastAPI Chat Service**: REST API for chatting with any Ollama model
-- **Prometheus Metrics**: Request latency, token counts, error rates by model
-- **Grafana Dashboards**: Real-time visualization of chat metrics
-- **Model Flexibility**: Works with any Ollama model (phi3:mini default)
-- **Health Checks**: Container health monitoring for reliability
-- **Docker Compose**: One-command deployment
+It’s deliberately simple, transparent, and easy to extend, making it ideal for:
 
-## Prerequisites
+developers learning MLOps fundamentals
 
-1. **Ollama** running on your host machine:
-   ```bash
-   ollama serve
-   ```
+teams who want observability around local LLM experiments
 
-2. **At least one model** pulled (we default to `phi3:mini`):
-   ```bash
-   ollama pull phi3:mini
-   ```
+founders prototyping model evaluation workflows
 
-3. **Docker & Docker Compose** installed
+engineers exploring inference telemetry or model routing
 
-## Quick Start
+📊 What This Project Shows (in Plain English)
 
-1. **Clone and start the stack**:
-   ```bash
-   git clone <this-repo>
-   cd LLM_Dashboard
-   docker compose up --build
-   ```
+This repo is not “just a dashboard.”
+It’s a minimal, but real, MLOps pipeline:
 
-2. **Test the chat API**:
-   ```bash
-   curl -X POST http://localhost:8000/chat \
-     -H "Content-Type: application/json" \
-     -d '{"message": "Explain what this project does in one sentence."}'
-   ```
+1. A model server that actually produces metrics
 
-3. **Access the services**:
-   - **Chat API**: http://localhost:8000
-   - **API Docs**: http://localhost:8000/docs
-   - **Metrics**: http://localhost:8000/metrics
-   - **Prometheus**: http://localhost:9090
-   - **Grafana**: http://localhost:3000 (admin/admin)
+FastAPI wraps a local Ollama model and logs:
 
-## Using Different Models
+request counts
 
-### Per-request model selection:
-```bash
+latency histograms
+
+token throughput
+
+error rates
+
+model names / statuses
+
+2. Prometheus scrapes & stores the metrics
+
+You get real, queryable time-series data.
+
+3. Grafana visualizes everything in real-time
+
+Dashboards show the health + behavior of your model:
+
+token throughput by model (prioritized as primary KPI)
+
+request rate
+
+response latency (95th percentile)
+
+error rate
+
+4. Everything runs locally with one command
+
+No GPU required.
+No cloud.
+Just Docker + Ollama.
+
+This repo is intentionally small, auditable, and production-shaped.
+
+🎥 Live Demo (GIF)
+
+(Insert your new GIF here once you upload it:)
+
+![demo](docs/demo.gif)
+
+
+Nothing explains an MLOps system better than seeing the metrics react in real time.
+
+🧱 Architecture Overview
+
+Here’s the blueprint:
+
+ ┌──────────────────────┐       ┌──────────────────┐        ┌──────────────────────┐
+ │    Client / UI       │──────▶│  FastAPI Chat     │──────▶│   Ollama Model        │
+ │  (ModelOps Console)  │       │  Service          │        │   (local inference)   │
+ └──────────────────────┘       └──────────────────┘        └──────────────────────┘
+            │                                 │
+            │ emits /metrics                  │ generates tokens
+            ▼                                 ▼
+ ┌──────────────────────┐       ┌──────────────────────────────┐
+ │     Prometheus       │◀──────│  chat-service /metrics        │
+ │  (scraping engine)   │       └──────────────────────────────┘
+ └──────────────────────┘
+            │
+            ▼
+ ┌──────────────────────┐
+ │       Grafana        │
+ │ (dashboards + alerts)│
+ └──────────────────────┘
+
+
+This is the same architecture used in production ML systems — just scaled down for local experimentation.
+
+⚡ Quick Start
+1. Start Ollama
+ollama serve
+ollama pull phi3:mini
+
+2. Run the entire stack
+docker compose up --build
+
+3. Explore the services
+Service	URL
+Chat API (FastAPI)	http://localhost:8000
+
+API Docs	http://localhost:8000/docs
+
+Metrics Endpoint	http://localhost:8000/metrics
+
+Prometheus	http://localhost:9090
+
+Grafana	http://localhost:3000
+ (admin/admin)
+🧪 Try a Chat Request
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
-  -d '{"message": "Hello!", "model": "qwen3:14b"}'
-```
+  -d '{"message": "What can you do?"}'
 
-### Change default model:
-```bash
-# In docker-compose.yml
-environment:
-  - DEFAULT_MODEL=qwen3:14b
-```
 
-## Available Models (from your setup)
-- `phi3:mini` (CPU-friendly default)
-- `qwen3:14b`, `qwen3:32b` 
-- `mistral-small3.2:latest`
-- `dolphin-mixtral:8x7b-v2.5-q3_K_S`
-- And many more...
+Or choose a different model:
 
-## Monitoring & Metrics
+curl -X POST http://localhost:8000/chat \
+  -H "Content-Type: application/json" \
+  -d '{"message": "hello", "model": "qwen3:14b"}'
 
-### Key Metrics Available:
-- `chat_requests_total` - Total requests by model and status
-- `chat_request_latency_seconds` - Request latency distribution
-- `chat_tokens_total` - Token counts by model
-- `chat_errors_total` - Error counts by model and reason
+📈 Metrics Tracked
+Core Prometheus metrics:
 
-### Sample Grafana Queries:
-```promql
-# Request rate by model
-rate(chat_requests_total[1m])
+chat_requests_total
 
-# 90th percentile latency
-histogram_quantile(0.9, sum(rate(chat_request_latency_seconds_bucket[5m])) by (le))
+chat_request_latency_seconds_bucket
 
-# Token throughput by model
-sum by (model) (rate(chat_tokens_total[5m]))
+chat_tokens_total
 
-# Error rate
-rate(chat_errors_total[1m]) / rate(chat_requests_total[1m])
-```
+chat_errors_total
 
-## Health Checks
+Grafana dashboard panels (in order):
+# Token Throughput by Model (primary KPI)
+sum by(model) (rate(chat_tokens_total[10s]))
 
-All services include health endpoints:
-- **Chat Service**: `/health` - Checks Ollama connectivity
-- **Prometheus**: `/-/healthy` 
-- **Grafana**: `/api/health`
+# Chat Request Rate
+rate(chat_requests_total[10s])
 
-## Configuration
+# Response Latency (95th percentile)
+histogram_quantile(0.95, sum by (le) (rate(chat_request_latency_seconds_bucket[20s])))
 
-### Environment Variables:
-```bash
-# Ollama connection
-OLLAMA_BASE_URL=http://host.docker.internal:11434
+# Error Rate
+(
+  sum(rate(chat_requests_total{status_code!="200"}[5m]))
+/
+  sum(rate(chat_requests_total[5m]))
+) * 100
+OR
+vector(0)
 
-# Default model
+
+This mirrors real-world ML observability: rate, latency, throughput, and errors.
+
+🛠 Configuration
+
+Environment Variables:
+
 DEFAULT_MODEL=phi3:mini
-
-# Grafana credentials (configurable)
+OLLAMA_BASE_URL=http://host.docker.internal:11434
 GRAFANA_ADMIN_USER=admin
 GRAFANA_ADMIN_PASSWORD=admin
-```
 
-## Development
 
-### Project Structure:
-```
-LLM_Dashboard/
-├── docker-compose.yml          # Main orchestration
-├── chat-service/               # FastAPI service
+To change the default model:
+
+environment:
+  - DEFAULT_MODEL=qwen3:14b
+
+🏗 Project Structure
+ModelOps_Console/
+├── docker-compose.yml
+├── STARTUP_PROCEDURE.md         # Complete setup and troubleshooting guide
+├── PROJECT_LOG.md              # Development history and technical notes
+├── chat-service/
+│   ├── app/
+│   │   ├── main.py             # FastAPI service with metrics
+│   │   └── templates/
+│   │       └── chat.html       # Web UI with embedded Grafana panels
 │   ├── Dockerfile
-│   ├── requirements.txt
-│   └── app/
-│       ├── __init__.py
-│       └── main.py            # Main FastAPI app
+│   └── requirements.txt
 ├── prometheus/
-│   └── prometheus.yml         # Prometheus config
-└── README.md
-```
+│   └── prometheus.yml
+└── grafana/
+    └── dashboard.json           # Pre-configured Ollama metrics dashboard
 
-### Local Development:
-```bash
-# Install dependencies
-cd chat-service
-pip install -r requirements.txt
+🐛 Troubleshooting
+Prometheus shows no metrics
 
-# Run locally (ensure Ollama is running)
-uvicorn app.main:app --reload --host 0.0.0.0 --port 8000
-```
+Check http://localhost:8000/metrics
 
-## Troubleshooting
+Ensure chat_requests_total increments when sending messages
 
-### Common Issues:
+Verify Prometheus prometheus.yml has the correct target
 
-1. **"Ollama unreachable"**:
-   - Ensure `ollama serve` is running
-   - Check Ollama is on port 11434: `curl http://localhost:11434/api/tags`
+Grafana panel blank or showing the home page
 
-2. **Model not found**:
-   - Pull the model: `ollama pull phi3:mini`
-   - Check available models: `ollama list`
+Use /d-solo/ embed URLs with &kiosk parameter for individual panels
 
-3. **Docker connectivity**:
-   - On Windows/Mac: Uses `host.docker.internal`
-   - On Linux: May need `--network="host"` or change to `localhost`
+Ensure panelId= matches dashboard.json (1=Chat Rate, 2=Latency, 3=Tokens, 4=Errors)
 
-4. **Slow responses**:
-   - Large models (32B+) are slower on CPU
-   - Consider using smaller models like `phi3:mini` for testing
+Example working URL: http://localhost:3000/d-solo/chat-metrics/ollama-chat-metrics?orgId=1&panelId=3&theme=dark&from=now-5m&to=now&refresh=5s&kiosk
 
-### Logs:
-```bash
-# View all logs
-docker compose logs -f
+Ollama not reachable
+curl http://localhost:11434/api/tags
 
-# Specific service logs
-docker compose logs -f chat-service
-```
 
-## Production Considerations
+If this fails → Ollama isn’t running.
 
-- Set strong Grafana passwords via environment variables
-- Configure Prometheus retention and storage
-- Add authentication for production APIs
-- Monitor container resource usage
-- Set up log aggregation
-- Configure backup for Grafana dashboards
+🧭 Why This Project Exists
 
-## Contributing
+Many MLOps tutorials focus on:
 
-1. Fork the repository
-2. Create a feature branch
-3. Test with multiple Ollama models
-4. Submit a pull request
+fancy models
 
-## License
+cloud deployments
 
-MIT License - feel free to use in your own projects!
+abstract concepts
+
+But modern ML systems live or die by observability.
+
+This project teaches the essentials:
+
+how to serve a model
+
+how to instrument it
+
+how to expose metrics
+
+how to scrape metrics
+
+how to visualize performance
+
+how to debug latency + throughput
+
+It’s a small but realistic example of production-style ML telemetry that works on any laptop.
+
+🙌 Contributing
+
+Feel free to open issues or PRs:
+
+new panels
+
+additional metrics
+
+multi-model routing
+
+benchmarking scripts
+
+GPU inference support
+
+📄 License
+
+MIT License — use it freely.
