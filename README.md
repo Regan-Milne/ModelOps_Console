@@ -2,9 +2,13 @@
 
 A lightweight, production-style MLOps observability stack for local Ollama models.
 
+<img width="1420" height="653" alt="Screenshot 2025-11-22 110027" src="https://github.com/user-attachments/assets/b1a0cf59-06a4-4308-9fff-27c14caad688" />
+
 This project demonstrates how to build a real inference service, expose structured Prometheus metrics, and visualize live model performance through Grafana — all wired together with Docker Compose.
 
-It’s deliberately simple, transparent, and easy to extend, making it ideal for:
+<img width="1420" height="653" alt="Screenshot 2025-11-22 110027" src="https://github.com/user-attachments/assets/30611cde-aac8-4b14-ac14-415e248e362b" />
+
+It's deliberately simple, transparent, and easy to extend, making it ideal for:
 
 developers learning MLOps fundamentals
 
@@ -16,8 +20,8 @@ engineers exploring inference telemetry or model routing
 
 📊 What This Project Shows (in Plain English)
 
-This repo is not “just a dashboard.”
-It’s a minimal, but real, MLOps pipeline:
+This repo is not "just a dashboard."
+It's a minimal, but real, MLOps pipeline:
 
 1. A model server that actually produces metrics
 
@@ -68,7 +72,7 @@ Nothing explains an MLOps system better than seeing the metrics react in real ti
 
 🧱 Architecture Overview
 
-Here’s the blueprint:
+Here's the blueprint:
 
  ┌──────────────────────┐       ┌──────────────────┐        ┌──────────────────────┐
  │    Client / UI       │──────▶│  FastAPI Chat     │──────▶│   Ollama Model        │
@@ -117,11 +121,27 @@ curl -X POST http://localhost:8000/chat \
   -d '{"message": "What can you do?"}'
 
 
-Or choose a different model:
+### Available Models (auto-detected from your Ollama setup)
+
+<img width="581" height="584" alt="Screenshot 2025-11-22 110209" src="https://github.com/user-attachments/assets/2437a919-54be-4ea8-86d7-ff10c7bb9474" />
+
+
+
+ModelOps Console automatically detects and lists the models you have installed in your local Ollama environment.
+
+Examples might include:
+- `llama3` / `llama3:instruct`
+- `mistral` / `mistral-small`
+- `qwen2` / `qwen2:7b`
+- `phi3`
+
+_No specific models are bundled — the dashboard adapts to whatever you have installed._
 
 curl -X POST http://localhost:8000/chat \
   -H "Content-Type: application/json" \
   -d '{"message": "hello", "model": "qwen3:14b"}'
+
+<img width="1416" height="979" alt="Screenshot 2025-11-22 110238" src="https://github.com/user-attachments/assets/70b4b69b-619c-41d5-8dd4-5996bb137281" />
 
 📈 Metrics Tracked
 Core Prometheus metrics:
@@ -209,7 +229,7 @@ Ollama not reachable
 curl http://localhost:11434/api/tags
 
 
-If this fails → Ollama isn’t running.
+If this fails → Ollama isn't running.
 
 🧭 Why This Project Exists
 
@@ -237,7 +257,7 @@ how to visualize performance
 
 how to debug latency + throughput
 
-It’s a small but realistic example of production-style ML telemetry that works on any laptop.
+It's a small but realistic example of production-style ML telemetry that works on any laptop.
 
 🙌 Contributing
 
